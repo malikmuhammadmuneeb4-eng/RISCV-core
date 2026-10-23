@@ -8,8 +8,8 @@ This repo tracks the build incrementally: every module ships with its own RTL, a
 
 | # | Module | Status |
 |---|--------|--------|
-| 1 | ALU | Not started |
-| 2 | Register File | Not started |
+| 1 | ALU | Done |
+| 2 | Register File | Done |
 | 3 | Instruction Decoder | Not started |
 | 4 | Single-Cycle Datapath | Not started |
 | 5 | Control Unit | Not started |
