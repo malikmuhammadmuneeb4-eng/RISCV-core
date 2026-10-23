@@ -1,24 +1,36 @@
-# RISCV-core
+# RISCV-core — update instructions
 
-A single-cycle RV32I RISC-V processor, built up module by module in SystemVerilog — each piece designed and verified from scratch as part of self-directed digital design/verification practice.
+This zip has the first two completed modules for the RISCV-core repo: **ALU** and **Register File**.
 
-This repo tracks the build incrementally: every module ships with its own RTL, a self-checking testbench, and a short README explaining the design and the bugs caught along the way. The companion repo, [Verilog-portfolio](https://github.com/malikmuhammadmuneeb4-eng/Verilog-portfolio), has the foundational practice work (combinational/sequential circuits, verification methodology drills) that led into this build.
+## Folder structure to use in the repo
 
-## Roadmap
+```
+RISCV-core/
+  alu/
+    alu.sv
+    README.md
+  register_file/
+    register_file.sv
+    README.md
+```
 
+Copy the `alu/` and `register_file/` folders from this zip straight into the root of the RISCV-core repo (same level as the existing root README.md).
+
+## Update the root README.md's roadmap table
+
+Change these two rows from "Not started" to "Done":
+
+```
 | # | Module | Status |
 |---|--------|--------|
-| 1 | ALU | Not started |
-| 2 | Register File | Not started |
+| 1 | ALU | Done |
+| 2 | Register File | Done |
 | 3 | Instruction Decoder | Not started |
 | 4 | Single-Cycle Datapath | Not started |
 | 5 | Control Unit | Not started |
 | 6 | Full Processor Integration | Not started |
 | 7 | Branch/Jump Handling | Not started |
 | 8 | Load/Store (Memory Interface) | Not started |
+```
 
-Target: a working single-cycle RV32I core that can run small hand-assembled programs (arithmetic, branches, loads/stores — the kind of exercises in the Verilog-portfolio repo's RISC-V assembly practice).
-
-## Why this exists
-
-Built as part of a self-study path from Digital Logic → SystemVerilog/Verification → Computer Architecture, aimed at a Jr. Design Verification / Jr. Hardware Design role. Each module is designed and coded by hand, then verified with a self-checking testbench before moving to the next piece.
+That's it — commit both new folders plus the README.md change together.
