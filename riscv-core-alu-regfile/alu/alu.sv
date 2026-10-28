@@ -17,6 +17,7 @@ module alu (
       4'b0111: result = ($signed(a) < $signed(b)) ? 1'b1 : 1'b0; // SLT (set less than, signed)
       4'b1000: result = $signed(a) >>> b[4:0];                   // SRA (shift right arithmetic)
       4'b1001: result = (a < b) ? 1'b1 : 1'b0;                   // BLTU (Branch if Less Than, Unsigned)
+      4'b1010: result = b;                                       // Pass_b
       default: result = 32'b0;
     endcase
   end
