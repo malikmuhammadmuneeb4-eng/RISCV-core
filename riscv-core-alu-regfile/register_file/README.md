@@ -5,6 +5,7 @@
 ```systemverilog
 module reg_file (
   input  logic        clk,
+  input logic       reset,
   input  logic        we,       // write enable
   input  logic [4:0]  rs1,      // read address 1
   input  logic [4:0]  rs2,      // read address 2
@@ -18,7 +19,9 @@ module reg_file (
 
   // Write port (synchronous). x0 is forced to 0 even if someone writes to it.
   always_ff @(posedge clk) begin
-    if (we == 1'b1) begin
+    if (reset==1)
+      regs <= '0;
+    else if (we == 1'b1) begin
       if (rd == 5'b00000)
         regs[rd] <= 32'b0;
       else
