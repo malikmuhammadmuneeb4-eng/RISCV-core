@@ -10,14 +10,32 @@ This repo tracks the build incrementally: every module ships with its own RTL, a
 |---|--------|--------|
 | 1 | ALU | Done |
 | 2 | Register File | Done |
-| 3 | Instruction Decoder | Not started |
-| 4 | Single-Cycle Datapath | Not started |
-| 5 | Control Unit | Not started |
-| 6 | Full Processor Integration | Not started |
-| 7 | Branch/Jump Handling | Not started |
-| 8 | Load/Store (Memory Interface) | Not started |
+| 3 | Instruction Decoder | Done |
+| 4 | Control Unit | Done |
+| 5 | PC Register | Done |
+| 6 | Instruction Memory | Done |
+| 7 | Data Memory | Done |
+| 8 | Single-Cycle Datapath (full integration) | Done — simulated and verified |
+| 9 | Branch/Jump Handling | Done (`beq`/`bne`/`blt`/`bge`/`bltu`/`bgeu`, `jal`, `jalr`) |
+| 10 | Load/Store (Memory Interface) | Done (`lw`/`sw`) |
 
-Target: a working single-cycle RV32I core that can run small hand-assembled programs (arithmetic, branches, loads/stores — the kind of exercises in the Verilog-portfolio repo's RISC-V assembly practice).
+Target reached: a working single-cycle RV32I core (`riscv-core-datapath/datapath/`) that runs small hand-assembled programs — arithmetic, loads/stores, taken branches, and `jal`/`jalr` call/return — verified against hand-traced expected register and memory values. Covers R-type, I-type, S-type, B-type, U-type (`lui`/`auipc`), and J-type/`jalr`.
+
+## Structure
+
+```
+riscv-core-alu-regfile/
+  alu/              — ALU (11 ops: add/sub/and/or/xor/sll/srl/slt/sra/bltu/pass_b)
+  register_file/    — 32x32-bit register file, 2 read ports + 1 write port
+
+riscv-core-datapath/
+  decoder/          — splits a raw instruction into opcode/rd/rs1/rs2/funct3/funct7/imm
+  control_unit/     — opcode/funct3/funct7 -> every control signal in the datapath
+  pc_counter/       — the program counter register
+  inst_memory/      — read-only instruction memory
+  data_mem/         — lw/sw data memory
+  datapath/         — full single-cycle core (wires all of the above together) + testbench + diagram
+```
 
 ## Why this exists
 

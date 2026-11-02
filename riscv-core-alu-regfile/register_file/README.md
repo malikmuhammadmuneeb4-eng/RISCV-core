@@ -47,3 +47,12 @@ endmodule
 - `end module` (two words) instead of `endmodule`.
 - A real design gap caught via guided reasoning rather than a syntax error: initially only forced `x0=0` on the write side, missing that an unwritten `x0` would read as undefined (X) rather than 0 — fixed by adding the same zero-forcing check on the read side.
 - First attempt at the read-side fix used a verbose 4-way `if-else` enumerating every combination of `rs1==0`/`rs2==0` (functionally correct, but unnecessary once it was clear `rd1` and `rd2` are independent of each other) — simplified to two independent ternary expressions after learning the ternary operator.
+
+**Why `reset` was added later:** the original design had no reset at all — added once the single-cycle `datapath` build was underway, specifically to make debugging easier (a known, repeatable zero-state at the start of every simulation, instead of all 32 registers starting undefined/X). `regs <= '0;` zeroes the entire unpacked array in one assignment — this is standard SystemVerilog (supported by Vivado/Questa/VCS), but **Icarus Verilog does not support whole-array assignment** and will error on this exact line ("Assignment to an entire array...is not yet supported"); the `datapath` testbench in `riscv-core-datapath/` was simulated locally with Icarus by swapping this one line for an equivalent `for` loop. If you're running this file through Icarus, use a `for`-loop reset instead:
+```systemverilog
+integer i;
+if (reset==1) begin
+  for (i = 0; i < 32; i = i + 1)
+    regs[i] <= 32'b0;
+end
+```
