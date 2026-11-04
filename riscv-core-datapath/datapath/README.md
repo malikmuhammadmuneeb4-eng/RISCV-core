@@ -133,6 +133,32 @@ addr 68: addi x5,x5,20   // x5 = 30
 
 All 18 checks (9 after the first block, 9 after the extension) pass. See Mistakes below for a real bug this extension caught — a wrong clock-cycle count in the *original* test that had gone unnoticed.
 
+**Extended a second time** with 19 more instructions, covering the remaining branch directions (`blt`, `bge`, `bltu`, `bgeu` — each taken and not-taken) and, along the way, negative-immediate sign extension (`x12=-12`, `x13=-5` used as operands throughout):
+
+```
+addr 72:  addi x12,x0,-12  // x12 = -12
+addr 76:  addi x13,x0,-5   // x13 = -5
+addr 80:  blt  x12,x13,8   // -12 < -5 (true), taken -> addr 88
+addr 84:  addi x13,x13,1   // SKIPPED
+addr 88:  blt  x5,x12,8    // 30 < -12 (false), not taken -> addr 92
+addr 92:  addi x5,x5,10    // x5 = 40
+addr 96:  bge  x12,x13,8   // -12 >= -5 (false), not taken -> addr 100
+addr 100: addi x5,x5,10    // x5 = 50
+addr 104: bge  x11,x12,8   // 87 >= -12 (true), taken -> addr 112
+addr 108: addi x5,x5,10    // SKIPPED
+addr 112: bltu x11,x5,8    // 87 <u 50 (false), not taken -> addr 116
+addr 116: addi x5,x5,10    // x5 = 60
+addr 120: bltu x8,x5,8     // 30 <u 60 (true), taken -> addr 128
+addr 124: addi x5,x5,10    // SKIPPED
+addr 128: bgeu x5,x11,8    // 60 >=u 87 (false), not taken -> addr 132
+addr 132: addi x5,x5,10    // x5 = 70
+addr 136: bgeu x5,x6,8     // 70 >=u 20 (true), taken -> addr 144
+addr 140: addi x5,x5,20    // SKIPPED
+addr 144: addi x14,x0,0    // x14 = 0
+```
+
+27 checks total pass. This block is also a self-check on sign extension: if the decoder's I-type immediate sign-extension were broken, `x12`/`x13` would come out as large positive numbers instead of negative, and every `blt`/`bge` comparison above would flip — so a passing run here verifies negative immediates work correctly too, without a dedicated test for it. (`expected_x12`/`expected_x13` are declared `reg signed [31:0]` so plain `-12`/`-5` literals work, and the pass/fail `$display` lines use `$signed(...)` so they print as `-12`, not as a large unsigned number — the comparison itself is unaffected either way, since `==` only compares bits.)
+
 **Note on `reg_file`'s reset and Icarus:** `reg_file.sv` resets its `regs` array with `regs <= '0;`, which is standard SystemVerilog but **not supported by Icarus Verilog** (errors with "Assignment to an entire array...is not yet supported"). `tb.sv` as committed here was actually simulated against a local copy of `reg_file` with that one line swapped for an equivalent `for` loop (see `register_file`'s README for the loop). The RTL in `riscv-core-alu-regfile/` is kept as `'0` since that's the better, more standard form and works fine in Vivado/Questa/VCS — only Icarus needs the workaround.
 
 ## Mistakes caught along the way
