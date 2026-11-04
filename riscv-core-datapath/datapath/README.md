@@ -120,6 +120,19 @@ PASS: x11 = 77
 
 All 12 instructions produced the hand-traced expected values on the first fully-correct run.
 
+**Extended afterwards** with 6 more instructions appended (without touching the original program), to cover branch directions the first pass never exercised — `beq`-not-taken (`x11` vs `x7`, unequal), `bne`-taken (`x5` vs `x6`), and `bne`-not-taken (`x5` vs `x5`):
+
+```
+addr 48: beq  x11,x7,8   // 77!=30, not taken -> addr 52
+addr 52: addi x11,x11,10 // x11 = 87
+addr 56: bne  x5,x6,8    // 10!=20, taken -> addr 64
+addr 60: addi x5,x5,10   // SKIPPED by the branch
+addr 64: bne  x5,x5,8    // equal, not taken -> addr 68
+addr 68: addi x5,x5,20   // x5 = 30
+```
+
+All 18 checks (9 after the first block, 9 after the extension) pass. See Mistakes below for a real bug this extension caught — a wrong clock-cycle count in the *original* test that had gone unnoticed.
+
 **Note on `reg_file`'s reset and Icarus:** `reg_file.sv` resets its `regs` array with `regs <= '0;`, which is standard SystemVerilog but **not supported by Icarus Verilog** (errors with "Assignment to an entire array...is not yet supported"). `tb.sv` as committed here was actually simulated against a local copy of `reg_file` with that one line swapped for an equivalent `for` loop (see `register_file`'s README for the loop). The RTL in `riscv-core-alu-regfile/` is kept as `'0` since that's the better, more standard form and works fine in Vivado/Questa/VCS — only Icarus needs the workaround.
 
 ## Mistakes caught along the way
@@ -131,6 +144,7 @@ All 12 instructions produced the hand-traced expected values on the first fully-
 - Branch-case literals initially written as bare decimal (`000`, `001`, ...) instead of `3'b000`, `3'b001`, ... — without the `3'b` prefix these are read as decimal numbers, not binary patterns, silently matching the wrong (or no) case.
 - An early version kept a leftover `assign next_pc = pc_plus_4;` in the Fetch section from before the full priority-ordered PC-update block existed — a second driver conflict with that block, caught and removed once the full `jalr`/`jump`/`branch` priority chain was in place.
 - The `next_pc` priority logic was initially branch-only, missing `jump`/`jalr` handling entirely — expanded into the full `jalr > jump > branch-taken > default` chain once `jal`/`jalr` reached this stage of the build.
+- **A real, latent bug found only when extending the test — wrong `repeat()` cycle count.** The original testbench used `repeat(12)` to run the 12-instruction program, but the program's `beq`-taken and `jal` each skip one instruction, so only **10** clock cycles are actually needed to reach the end — `repeat(12)` silently ran 2 extra cycles against still-uninitialized memory (`X`). Those 2 cycles decoded to an unmatched opcode, fell through to `control_unit`'s `default` case (`reg_write=0`), and were harmless **as long as nothing real lived at those addresses** — so the bug never showed up as a FAIL. The moment 6 new instructions were appended right after the original program, those same 2 leftover cycles silently consumed the first two of them (`beq`-not-taken and the following `addi` never executed), and the final `x11` value came out wrong. Fixed by counting cycles as *dynamic* (actually executed) instructions rather than the static count in the source: `repeat(10)` for the original block, `repeat(5)` for the extension (its own `bne`-taken also skips one instruction). Caught by adding temporary `$display` prints of `pc`/`instr` each cycle and tracing where execution actually went — a reminder that a test passing doesn't mean the test itself is correct, only that whatever it happened to check came out right.
 
 ## Diagram
 
