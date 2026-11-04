@@ -6,7 +6,7 @@ datapath uut(.clk(clk), .reset(reset));
 initial clk=0;
 always #5 clk=~clk;
 
-reg [31:0] expected_x10,expected_x5, expected_x6, expected_x7, expected_mem0, expected_x8, expected_x9, expected_x1, expected_x11,expected_x14;
+reg [31:0] expected_x10,expected_x5, expected_x6, expected_x7, expected_mem0, expected_x8, expected_x9, expected_x1, expected_x11,expected_x14,expected_x0, expected_mem6;
 reg signed [31:0] expected_x12, expected_x13;
 initial begin
 reset=1;
@@ -261,6 +261,98 @@ if (uut.REGISTERS.regs[14] == expected_x14)
   $display("PASS: x14 = %0d", uut.REGISTERS.regs[14]);
 else
   $display("FAIL: x14 = %0d, expected %0d", uut.REGISTERS.regs[14], expected_x14);
+
+uut.ITEM.mem[37]= 32'h00c00013; //addi x0,x0,12
+uut.ITEM.mem[38]= 32'h00070463; // beq  x14,x0,8
+uut.ITEM.mem[39]= 32'h00a28293; //addi x5,x5,10
+uut.ITEM.mem[40]= 32'h00032223; //sw   x0,4(x6)
+expected_x10=32'd0;
+expected_x5=32'd70;
+expected_x6=32'd20;
+expected_x7=32'd30;
+expected_mem0=32'd30;
+expected_x8=32'd30;
+expected_x9=32'd0;
+expected_x1=32'd40;
+expected_x11=32'd87;
+expected_x12=-12;
+expected_x13=-5;
+expected_x14=32'd0;
+expected_x0=32'b0;
+expected_mem6=32'b0;
+repeat(3) begin
+    @(posedge clk);
+    #1;
+end
+if (uut.REGISTERS.regs[10] == expected_x10)
+  $display("PASS: x10 = %0d", uut.REGISTERS.regs[10]);
+else
+  $display("FAIL: x10 = %0d, expected %0d", uut.REGISTERS.regs[10], expected_x10);
+
+if (uut.REGISTERS.regs[5] == expected_x5)
+  $display("PASS: x5 = %0d", uut.REGISTERS.regs[5]);
+else
+  $display("FAIL: x5 = %0d, expected %0d", uut.REGISTERS.regs[5], expected_x5);
+
+if (uut.REGISTERS.regs[6] == expected_x6)
+  $display("PASS: x6 = %0d", uut.REGISTERS.regs[6]);
+else
+  $display("FAIL: x6 = %0d, expected %0d", uut.REGISTERS.regs[6], expected_x6);
+
+if (uut.REGISTERS.regs[7] == expected_x7)
+  $display("PASS: x7 = %0d", uut.REGISTERS.regs[7]);
+else
+  $display("FAIL: x7 = %0d, expected %0d", uut.REGISTERS.regs[7], expected_x7);
+
+if (uut.DM0.mem[0] == expected_mem0)
+  $display("PASS: mem0 = %0d", uut.DM0.mem[0]);
+else
+  $display("FAIL: mem0 = %0d, expected %0d", uut.DM0.mem[0], expected_mem0);
+
+if (uut.REGISTERS.regs[8] == expected_x8)
+  $display("PASS: x8 = %0d", uut.REGISTERS.regs[8]);
+else
+  $display("FAIL: x8 = %0d, expected %0d", uut.REGISTERS.regs[8], expected_x8);
+
+if (uut.REGISTERS.regs[9] == expected_x9)
+  $display("PASS: x9 = %0d", uut.REGISTERS.regs[9]);
+else
+  $display("FAIL: x9 = %0d, expected %0d", uut.REGISTERS.regs[9], expected_x9);
+
+if (uut.REGISTERS.regs[1] == expected_x1)
+  $display("PASS: x1 = %0d", uut.REGISTERS.regs[1]);
+else
+  $display("FAIL: x1 = %0d, expected %0d", uut.REGISTERS.regs[1], expected_x1);
+
+if (uut.REGISTERS.regs[11] == expected_x11)
+  $display("PASS: x11 = %0d", uut.REGISTERS.regs[11]);
+else
+  $display("FAIL: x11 = %0d, expected %0d", uut.REGISTERS.regs[11], expected_x11);
+
+if (uut.REGISTERS.regs[12] == expected_x12)
+  $display("PASS: x12 = %0d",$signed(uut.REGISTERS.regs[12]));
+else
+  $display("FAIL: x12 = %0d, expected %0d", $signed(uut.REGISTERS.regs[12]), expected_x12);
+
+if (uut.REGISTERS.regs[13] == expected_x13)
+  $display("PASS: x13 = %0d", $signed(uut.REGISTERS.regs[13]));
+else
+  $display("FAIL: x13 = %0d, expected %0d",  $signed(uut.REGISTERS.regs[13]), expected_x13);
+
+if (uut.REGISTERS.regs[14] == expected_x14)
+  $display("PASS: x14 = %0d", uut.REGISTERS.regs[14]);
+else
+  $display("FAIL: x14 = %0d, expected %0d", uut.REGISTERS.regs[14], expected_x14);
+
+if (uut.DM0.mem[6] == expected_mem6)
+  $display("PASS: mem6 = %0d", uut.DM0.mem[6]);
+else
+  $display("FAIL: mem6 = %0d, expected %0d", uut.DM0.mem[6], expected_mem6);
+
+if (uut.REGISTERS.regs[0] == expected_x0)
+  $display("PASS: x0 = %0d", uut.REGISTERS.regs[0]);
+else
+  $display("FAIL: x0 = %0d, expected %0d", uut.REGISTERS.regs[0], expected_x0);
 
 $finish;
 end

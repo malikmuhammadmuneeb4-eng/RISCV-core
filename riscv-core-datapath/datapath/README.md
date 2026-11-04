@@ -159,6 +159,19 @@ addr 144: addi x14,x0,0    // x14 = 0
 
 27 checks total pass. This block is also a self-check on sign extension: if the decoder's I-type immediate sign-extension were broken, `x12`/`x13` would come out as large positive numbers instead of negative, and every `blt`/`bge` comparison above would flip — so a passing run here verifies negative immediates work correctly too, without a dedicated test for it. (`expected_x12`/`expected_x13` are declared `reg signed [31:0]` so plain `-12`/`-5` literals work, and the pass/fail `$display` lines use `$signed(...)` so they print as `-12`, not as a large unsigned number — the comparison itself is unaffected either way, since `==` only compares bits.)
 
+**Extended a third time** with 4 more instructions, covering the `x0` write-protect rule (`x0` must always read as zero, even after an attempted write) with both a direct check and an indirect cross-check through a branch:
+
+```
+addr 148: addi x0,x0,12   // attempt to write 12 into x0
+addr 152: beq  x14,x0,8   // x14 (=0) == x0 ? if x0 really stayed 0, taken -> addr 160
+addr 156: addi x5,x5,10   // SKIPPED if the branch above is taken
+addr 160: sw   x0,4(x6)   // mem[6] = x0 (=0)
+```
+
+The `beq` is an *indirect* check — it only takes the not-skipped path if `x0` actually still reads as `0`, so a passing run here confirms write-protection two ways at once: directly (`expected_x0=0`) and indirectly (the branch behaving as if `x0==0`). 36 checks total pass.
+
+
+
 **Note on `reg_file`'s reset and Icarus:** `reg_file.sv` resets its `regs` array with `regs <= '0;`, which is standard SystemVerilog but **not supported by Icarus Verilog** (errors with "Assignment to an entire array...is not yet supported"). `tb.sv` as committed here was actually simulated against a local copy of `reg_file` with that one line swapped for an equivalent `for` loop (see `register_file`'s README for the loop). The RTL in `riscv-core-alu-regfile/` is kept as `'0` since that's the better, more standard form and works fine in Vivado/Questa/VCS — only Icarus needs the workaround.
 
 ## Mistakes caught along the way
@@ -171,6 +184,7 @@ addr 144: addi x14,x0,0    // x14 = 0
 - An early version kept a leftover `assign next_pc = pc_plus_4;` in the Fetch section from before the full priority-ordered PC-update block existed — a second driver conflict with that block, caught and removed once the full `jalr`/`jump`/`branch` priority chain was in place.
 - The `next_pc` priority logic was initially branch-only, missing `jump`/`jalr` handling entirely — expanded into the full `jalr > jump > branch-taken > default` chain once `jal`/`jalr` reached this stage of the build.
 - **A real, latent bug found only when extending the test — wrong `repeat()` cycle count.** The original testbench used `repeat(12)` to run the 12-instruction program, but the program's `beq`-taken and `jal` each skip one instruction, so only **10** clock cycles are actually needed to reach the end — `repeat(12)` silently ran 2 extra cycles against still-uninitialized memory (`X`). Those 2 cycles decoded to an unmatched opcode, fell through to `control_unit`'s `default` case (`reg_write=0`), and were harmless **as long as nothing real lived at those addresses** — so the bug never showed up as a FAIL. The moment 6 new instructions were appended right after the original program, those same 2 leftover cycles silently consumed the first two of them (`beq`-not-taken and the following `addi` never executed), and the final `x11` value came out wrong. Fixed by counting cycles as *dynamic* (actually executed) instructions rather than the static count in the source: `repeat(10)` for the original block, `repeat(5)` for the extension (its own `bne`-taken also skips one instruction). Caught by adding temporary `$display` prints of `pc`/`instr` each cycle and tracing where execution actually went — a reminder that a test passing doesn't mean the test itself is correct, only that whatever it happened to check came out right.
+- **Word-alignment slip while designing the `x0` write-protect test.** The store instruction was first planned as `sw x0,4(x11)`, intending `mem[1]`, but `x11` holds `87` at that point — not a multiple of 4 — so `addr[9:2]` (the byte-address-to-word-index conversion, equivalent to `addr>>2`) of `87+4=91` actually resolves to `mem[22]`, not `mem[1]` and not `mem[91]` either (the array index is the *word* index, not the raw byte address). Fixed by basing the store off `x6` (value `20`, word-aligned) instead, giving the intended `mem[6]` cleanly.
 
 ## Diagram
 
