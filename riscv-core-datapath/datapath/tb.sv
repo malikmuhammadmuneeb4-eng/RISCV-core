@@ -51,11 +51,77 @@ expected_x9=32'd0;
 expected_x1=32'd40;
 expected_x11=32'd77;
 
-repeat(12) begin
+repeat(10) begin
   @(posedge clk);
   #1;
 end
 
+if (uut.REGISTERS.regs[10] == expected_x10)
+  $display("PASS: x10 = %0d", uut.REGISTERS.regs[10]);
+else
+  $display("FAIL: x10 = %0d, expected %0d", uut.REGISTERS.regs[10], expected_x10);
+
+if (uut.REGISTERS.regs[5] == expected_x5)
+  $display("PASS: x5 = %0d", uut.REGISTERS.regs[5]);
+else
+  $display("FAIL: x5 = %0d, expected %0d", uut.REGISTERS.regs[5], expected_x5);
+
+if (uut.REGISTERS.regs[6] == expected_x6)
+  $display("PASS: x6 = %0d", uut.REGISTERS.regs[6]);
+else
+  $display("FAIL: x6 = %0d, expected %0d", uut.REGISTERS.regs[6], expected_x6);
+
+if (uut.REGISTERS.regs[7] == expected_x7)
+  $display("PASS: x7 = %0d", uut.REGISTERS.regs[7]);
+else
+  $display("FAIL: x7 = %0d, expected %0d", uut.REGISTERS.regs[7], expected_x7);
+
+if (uut.DM0.mem[0] == expected_mem0)
+  $display("PASS: mem0 = %0d", uut.DM0.mem[0]);
+else
+  $display("FAIL: mem0 = %0d, expected %0d", uut.DM0.mem[0], expected_mem0);
+
+if (uut.REGISTERS.regs[8] == expected_x8)
+  $display("PASS: x8 = %0d", uut.REGISTERS.regs[8]);
+else
+  $display("FAIL: x8 = %0d, expected %0d", uut.REGISTERS.regs[8], expected_x8);
+
+if (uut.REGISTERS.regs[9] == expected_x9)
+  $display("PASS: x9 = %0d", uut.REGISTERS.regs[9]);
+else
+  $display("FAIL: x9 = %0d, expected %0d", uut.REGISTERS.regs[9], expected_x9);
+
+if (uut.REGISTERS.regs[1] == expected_x1)
+  $display("PASS: x1 = %0d", uut.REGISTERS.regs[1]);
+else
+  $display("FAIL: x1 = %0d, expected %0d", uut.REGISTERS.regs[1], expected_x1);
+
+if (uut.REGISTERS.regs[11] == expected_x11)
+  $display("PASS: x11 = %0d", uut.REGISTERS.regs[11]);
+else
+  $display("FAIL: x11 = %0d, expected %0d", uut.REGISTERS.regs[11], expected_x11);
+
+
+uut.ITEM.mem[12]= 32'h00758463;  //beq  x11,x7,8
+uut.ITEM.mem[13]= 32'h00a58593;  //addi x11,x11,10
+uut.ITEM.mem[14]= 32'h00629463; //bne  x5,x6,8
+uut.ITEM.mem[15]= 32'h00a28293;  //addi x5,x5,10
+uut.ITEM.mem[16]= 32'h00529463; //bne  x5,x5,8
+uut.ITEM.mem[17]= 32'h01428293; //addi x5,x5,20
+expected_x10=32'd0;
+expected_x5=32'd30;
+expected_x6=32'd20;
+expected_x7=32'd30;
+expected_mem0=32'd30;
+expected_x8=32'd30;
+expected_x9=32'd0;
+expected_x1=32'd40;
+expected_x11=32'd87;
+
+repeat(5) begin
+  @(posedge clk);
+  #1;
+end
 if (uut.REGISTERS.regs[10] == expected_x10)
   $display("PASS: x10 = %0d", uut.REGISTERS.regs[10]);
 else
